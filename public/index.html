@@ -6,6 +6,7 @@
     <title>KV Chat App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <style>
         /* කලින් තිබ්බ CSS Styles මෙතනටම දාන්න (ඔයාගේ කලින් code එකෙන් copy කරගන්න) */
         body {
@@ -331,7 +332,7 @@
         // ===========================================
         // Global State for Chat Bot "Teaching" (Session-based) (වෙනසක් නැහැ)
         // ===========================================
-        let sessionKnowledge = []; 
+        let sessionKnowledge = [];    
 
         // ===========================================
         // Custom Message Box Functions (වෙනසක් නැහැ)
@@ -465,9 +466,11 @@
 
             try {
                 // Backend proxy endpoint එකට call කරනවා
-                // deploy කලාට පස්සේ මෙතනට ඔයාගේ backend URL එක එනවා.
-                // උදා: 'https://your-backend-app.onrender.com/api/chat'
-                const response = await fetch('/api/chat', { 
+                // මෙතනට තමයි ඔයාගේ Replit Backend URL එක දාන්න ඕනේ.
+                // අපි Replit එකෙන් ගත්තු URL එක මෙතන hardcode කරනවා.
+                const backendApiUrl = 'https://5c9939d7-789c-4141-851d-e8e1c5f965cc-00-3rii08a1gx5am.sisko.replit.dev/api/chat';
+                
+                const response = await fetch(backendApiUrl, { 
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -479,8 +482,10 @@
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Backend error: ${response.status} ${response.statusText} - ${errorData.error || 'Unknown error'}`);
+                    // 404 වගේ error එකක් ආවොත්, response එක JSON නෙවෙයි වෙන්න පුළුවන්.
+                    // ඒ නිසා අපි text විදියට අරන් error message එක හදමු.
+                    const errorText = await response.text(); 
+                    throw new Error(`Backend error: ${response.status} ${response.statusText} - ${errorText}`);
                 }
 
                 const data = await response.json();
