@@ -1,0 +1,12 @@
+# kv-chat-app/.gitignore
+# Node.js specific
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+.env
+
+# macOS specific
+.DS_Store
+
+# Other system files
+Thumbs.db

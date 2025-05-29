@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KV Chat App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* කලින් තිබ්බ CSS Styles මෙතනටම දාන්න (ඔයාගේ කලින් code එකෙන් copy කරගන්න) */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            padding: 1rem;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        .app-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px; /* Slightly wider for chat */
+            height: 90vh; /* Make it take more vertical space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensure internal elements don't overflow */
+        }
+        /* Login/Auth Section Styles */
+        .auth-section {
+            padding: 2rem;
+            text-align: center;
+            flex-grow: 1; /* Allow it to take available space */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .auth-section input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .auth-section button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .auth-section button:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* Indigo 700 */
+        }
+        .btn-secondary {
+            background-color: #6b7280; /* Gray 500 */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* Gray 600 */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red 500 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Red 600 */
+        }
+        #userStatus {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        /* Chat Section Styles */
+        .chat-section {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            height: 100%;
+            padding: 0; /* Remove padding from container, handle in inner elements */
+        }
+        .chat-header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 1rem;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-messages {
+            flex-grow: 1; /* Takes up remaining space */
+            padding: 1rem;
+            overflow-y: auto; /* Scrollable message area */
+            background-color: #f9fafb; /* Light background for messages */
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .message-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            word-wrap: break-word; /* Ensure long words break */
+        }
+        .message-bubble.user {
+            background-color: #4f46e5;
+            color: white;
+            margin-left: auto; /* Align to right */
+            border-bottom-right-radius: 4px; /* Pointy bottom right */
+        }
+        .message-bubble.bot {
+            background-color: #e5e7eb;
+            color: #374151;
+            margin-right: auto; /* Align to left */
+            border-bottom-left-radius: 4px; /* Pointy bottom left */
+        }
+        .chat-input-area {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .chat-input-area input {
+            flex-grow: 1;
+            margin-right: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+        .chat-input-area button {
+            width: auto;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            background-color: #10b981; /* Green 500 */
+            color: white;
+            transition: background-color 0.3s ease;
+            box-shadow: none; /* Remove extra shadow */
+            margin-bottom: 0; /* Remove default margin */
+        }
+        .chat-input-area button:hover {
+            background-color: #059669; /* Green 600 */
+            transform: none; /* Remove translateY */
+        }
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 20px;
+            margin-top: 0.5rem;
+            margin-left: auto;
+        }
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4f46e5;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Custom Message Box Styles (from previous code) */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-box-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .message-box-overlay.show .message-box {
+            transform: translateY(0);
+        }
+        .message-box h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .message-box p {
+            margin-bottom: 1.5rem;
+            color: #4b5563;
+        }
+        .message-box button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            width: auto;
+            margin-bottom: 0;
+        }
+        .message-box button:hover {
+            background-color: #4338ca;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="authSection" class="auth-section">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">KV APP</h1>
+
+            <input type="email" id="email" placeholder="Email" class="focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <input type="password" id="password" placeholder="Password" class="focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            
+            <button id="signupButton" class="btn-primary">Sign Up</button>
+            <button id="loginButton" class="btn-secondary">Log In</button>
+
+            <p id="authStatus" class="mt-6 text-lg font-medium text-gray-700">Not signed in.</p>
+        </div>
+
+        <div id="chatSection" class="chat-section">
+            <div class="chat-header">
+                <h2 class="text-xl font-semibold">KV Bot</h2>
+                <button id="chatLogoutButton" class="text-sm font-medium px-3 py-1 rounded-full bg-red-500 hover:bg-red-600 transition">Log Out</button>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="message-bubble bot">Hello! How can I help you today?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type your message..." class="focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <button id="sendMessageButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageBoxOverlay" class="message-box-overlay">
+        <div class="message-box">
+            <h3 id="messageBoxTitle"></h3>
+            <p id="messageBoxContent"></p>
+            <button id="messageBoxCloseButton">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+        // ===========================================
+        // Firebase Configuration (මෙතන වෙනසක් නැහැ)
+        // ===========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1x6HLgs5sQ9y-Kf6gJjTECBaP70zQOhI",
+            authDomain: "kvmatta-178a2.firebaseapp.com",
+            projectId: "kvmatta-178a2",
+            storageBucket: "kvmatta-178a2.firebasestorage.app",
+            messagingSenderId: "1069065036627",
+            appId: "1:1069065036627:web:789f55019b3b37724977a6",
+            measurementId: "G-G558GPHFT3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // ===========================================
+        // UI Element References (වෙනසක් නැහැ)
+        // ===========================================
+        const authSection = document.getElementById('authSection');
+        const chatSection = document.getElementById('chatSection');
+
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const signupButton = document.getElementById('signupButton');
+        const loginButton = document.getElementById('loginButton');
+        const authStatusParagraph = document.getElementById('authStatus');
+
+        const chatLogoutButton = document.getElementById('chatLogoutButton');
+        const chatMessagesDiv = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessageButton = document.getElementById('sendMessageButton');
+
+        const messageBoxOverlay = document.getElementById('messageBoxOverlay');
+        const messageBoxTitle = document.getElementById('messageBoxTitle');
+        const messageBoxContent = document.getElementById('messageBoxContent');
+        const messageBoxCloseButton = document.getElementById('messageBoxCloseButton');
+
+        // ===========================================
+        // Global State for Chat Bot "Teaching" (Session-based) (වෙනසක් නැහැ)
+        // ===========================================
+        let sessionKnowledge = []; 
+
+        // ===========================================
+        // Custom Message Box Functions (වෙනසක් නැහැ)
+        // ===========================================
+        function showMessageBox(title, message) {
+            messageBoxTitle.innerText = title;
+            messageBoxContent.innerText = message;
+            messageBoxOverlay.classList.add('show');
+        }
+
+        messageBoxCloseButton.addEventListener('click', () => {
+            messageBoxOverlay.classList.remove('show');
+        });
+
+        // ===========================================
+        // Firebase Authentication Logic (වෙනසක් නැහැ)
+        // ===========================================
+        signupButton.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showMessageBox("Input Error", "Please enter both email and password.");
+                return;
+            }
+            if (password.length < 6) {
+                showMessageBox("Password Error", "Password should be at least 6 characters long.");
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    console.log("Signed up:", userCredential.user);
+                    showMessageBox("Success", `Successfully signed up as ${userCredential.user.email}!`);
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                })
+                .catch((error) => {
+                    console.error("Sign up error:", error);
+                    showMessageBox("Sign Up Failed", error.message);
+                });
+        });
+
+        loginButton.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showMessageBox("Input Error", "Please enter both email and password.");
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    console.log("Logged in:", userCredential.user);
+                    showMessageBox("Success", `Successfully logged in as ${userCredential.user.email}!`);
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                })
+                .catch((error) => {
+                    console.error("Login error:", error);
+                    showMessageBox("Login Failed", error.message);
+                });
+        });
+
+        chatLogoutButton.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                console.log("Logged out");
+                showMessageBox("Logged Out", "You have been successfully logged out.");
+            }).catch((error) => {
+                console.error("Logout error:", error);
+                showMessageBox("Logout Error", error.message);
+            });
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authSection.style.display = 'none';
+                chatSection.style.display = 'flex'; // Show chat
+                authStatusParagraph.innerText = `Currently signed in as: ${user.email}`;
+            } else {
+                authSection.style.display = 'flex'; // Show auth
+                chatSection.style.display = 'none'; // Hide chat
+                authStatusParagraph.innerText = "Not signed in.";
+                chatMessagesDiv.innerHTML = '<div class="message-bubble bot">Hello! How can I help you today?</div>';
+                sessionKnowledge = []; // Clear session knowledge on logout
+            }
+        });
+
+        // ===========================================
+        // Chat Bot Logic (Groq Integration - MODIFIED FOR BACKEND PROXY)
+        // ===========================================
+
+        function addMessage(text, sender) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', sender);
+            messageBubble.innerText = text;
+            chatMessagesDiv.appendChild(messageBubble);
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+
+        function addLoadingIndicator() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.classList.add('loading-dots', 'bot');
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.innerHTML = `
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            `;
+            chatMessagesDiv.appendChild(loadingDiv);
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            return loadingDiv;
+        }
+
+        function removeLoadingIndicator(indicator) {
+            if (indicator && indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+            }
+        }
+
+        /**
+         * Sends a message to the Groq API via the backend proxy.
+         * @param {string} message - The user's message.
+         * @param {Array<string>} knowledge - In-memory "taught" knowledge to send to backend.
+         */
+        async function sendToGroqViaBackend(message, knowledge) {
+            const loadingIndicator = addLoadingIndicator();
+            chatInput.disabled = true;
+            sendMessageButton.disabled = true;
+
+            try {
+                // Backend proxy endpoint එකට call කරනවා
+                // deploy කලාට පස්සේ මෙතනට ඔයාගේ backend URL එක එනවා.
+                // උදා: 'https://your-backend-app.onrender.com/api/chat'
+                const response = await fetch('/api/chat', { 
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        knowledge: knowledge 
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Backend error: ${response.status} ${response.statusText} - ${errorData.error || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                const botResponse = data.botResponse || "Sorry, I couldn't get a response from the bot.";
+                addMessage(botResponse, 'bot');
+
+            } catch (error) {
+                console.error("Error communicating with backend/Groq API:", error);
+                addMessage(`Error: ${error.message}`, 'bot');
+                showMessageBox("Chat Error", `Failed to get a response: ${error.message}`);
+            } finally {
+                removeLoadingIndicator(loadingIndicator);
+                chatInput.disabled = false;
+                sendMessageButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        sendMessageButton.addEventListener('click', () => {
+            const userMessage = chatInput.value.trim();
+            if (userMessage) {
+                addMessage(userMessage, 'user');
+                chatInput.value = '';
+
+                // Check for "teach" command
+                if (userMessage.toLowerCase().startsWith("teach me that:")) {
+                    const fact = userMessage.substring("teach me that:".length).trim();
+                    if (fact) {
+                        sessionKnowledge.push(fact);
+                        addMessage("Okay, I've noted that. I will try to use this information in our current conversation if relevant.", 'bot');
+                    } else {
+                        addMessage("Please provide a fact after 'teach me that:'.", 'bot');
+                    }
+                } else {
+                    sendToGroqViaBackend(userMessage, sessionKnowledge);
+                }
+            }
+        });
+
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessageButton.click();
+            }
+        });
+
+    </script>
+</body>
+</html>

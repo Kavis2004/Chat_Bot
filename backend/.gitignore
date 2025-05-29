@@ -1,0 +1,3 @@
+# .gitignore file (kv-chat-app/backend/.gitignore)
+node_modules/
+.env
